@@ -12,6 +12,10 @@ import { useRouter } from "expo-router";
 export default function HomeScreen() {
   const router = useRouter();
 
+  const navigateToCheckPrice = (city: string) => {
+    router.push(`/check-price?city=${encodeURIComponent(city)}`);
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Rentscope</Text>
@@ -28,7 +32,10 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.cityContainer}>
-        <TouchableOpacity style={styles.cityBox}>
+        <TouchableOpacity
+          style={styles.cityBox}
+          onPress={() => navigateToCheckPrice("Bangalore")}
+        >
           <Image
             source={require("@/assets/images/bangalore.png")}
             style={styles.cityIcon}
@@ -36,7 +43,10 @@ export default function HomeScreen() {
           <Text style={styles.cityName}>Bangalore</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.cityBox}>
+        <TouchableOpacity
+          style={styles.cityBox}
+          onPress={() => navigateToCheckPrice("Kolkata")}
+        >
           <Image
             source={require("@/assets/images/kolkata.png")}
             style={styles.cityIcon}
@@ -44,7 +54,10 @@ export default function HomeScreen() {
           <Text style={styles.cityName}>Kolkata</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.cityBox}>
+        <TouchableOpacity
+          style={styles.cityBox}
+          onPress={() => navigateToCheckPrice("New Delhi")}
+        >
           <Image
             source={require("@/assets/images/delhi.png")}
             style={styles.cityIcon}
@@ -52,7 +65,10 @@ export default function HomeScreen() {
           <Text style={styles.cityName}>New Delhi</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.cityBox}>
+        <TouchableOpacity
+          style={styles.cityBox}
+          onPress={() => navigateToCheckPrice("Mumbai")}
+        >
           <Image
             source={require("@/assets/images/mumbai.png")}
             style={styles.cityIcon}
@@ -67,7 +83,10 @@ export default function HomeScreen() {
         placeholderTextColor="#888"
       />
 
-      <TouchableOpacity style={styles.checkPriceButton}>
+      <TouchableOpacity
+        style={styles.checkPriceButton}
+        // onPress={() => navigateToCheckPrice(null)}
+      >
         <Text style={styles.buttonText}>Check Price</Text>
       </TouchableOpacity>
     </View>
