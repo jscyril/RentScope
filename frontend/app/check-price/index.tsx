@@ -127,6 +127,52 @@ export default function CheckPriceScreen() {
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* Property Size Slider */}
+      <Text style={styles.sectionTitle}>Property Size (sq.ft)</Text>
+      <View style={styles.sliderContainer}>
+        <Text style={styles.sliderValue}>Min.</Text>
+        <Slider
+          style={styles.slider}
+          minimumValue={500}
+          maximumValue={5000}
+          step={100}
+          value={propertySize[0]}
+          onValueChange={(value) => setPropertySize([value, propertySize[1]])}
+          minimumTrackTintColor="#503591"
+          thumbTintColor="#503591"
+        />
+        <Text style={styles.sliderValue}>Max.</Text>
+      </View>
+
+      {/* Amenities Selection */}
+      <Text style={styles.sectionTitle}>Amenities</Text>
+      <View style={styles.amenitiesContainer}>
+        {[
+          "Balcony",
+          "Central A/C",
+          "Maids Room",
+          "Private Pool",
+          "Pets Allowed",
+        ].map((amenity) => (
+          <TouchableOpacity
+            key={amenity}
+            style={[
+              styles.amenityButton,
+              selectedAmenities.includes(amenity) &&
+                styles.amenityButtonSelected,
+            ]}
+            onPress={() => toggleAmenity(amenity)}
+          >
+            <Text style={styles.amenityText}>{amenity}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Predict Price Button */}
+      <TouchableOpacity style={styles.predictButton}>
+        <Text style={styles.buttonText}>Predict Price Range</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -194,5 +240,51 @@ const styles = StyleSheet.create({
   selectionText: {
     fontSize: 16,
     color: "#503591",
+  },
+  sliderContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  slider: {
+    flex: 1,
+    marginHorizontal: 10,
+  },
+  sliderValue: {
+    fontSize: 16,
+    color: "#503591",
+  },
+  amenitiesContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  amenityButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#503591",
+    marginBottom: 10,
+  },
+  amenityButtonSelected: {
+    backgroundColor: "#503591",
+  },
+  amenityText: {
+    fontSize: 16,
+    color: "#503591",
+  },
+  predictButton: {
+    backgroundColor: "#503591",
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
