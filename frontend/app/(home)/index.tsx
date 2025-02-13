@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,20 +6,44 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 
 export default function HomeScreen() {
   const router = useRouter();
 
-  const navigateToCheckPrice = (city: string) => {
-    router.push(`/check-price?city=${encodeURIComponent(city)}`);
+  // Track which city is selected (if any)
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  // Track the user-entered locality
+  const [locality, setLocality] = useState("");
+
+  const handleCitySelection = (cityName: string) => {
+    // If the same city is tapped again, deselect it. Otherwise, select the new city.
+    setSelectedCity((prev) => (prev === cityName ? null : cityName));
+  };
+
+  const handleCheckPrice = () => {
+    if (!selectedCity) {
+      // You could show an alert or simply navigate without a city
+      Alert.alert("Please select a city before checking price.");
+      return;
+    }
+
+    // Optionally pass the locality name as well if you want
+    // e.g. ?city=Bangalore&locality=Whitefield
+    router.push(
+      `/check-price?city=${encodeURIComponent(
+        selectedCity
+      )}&locality=${encodeURIComponent(locality)}`
+    );
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Rentscope</Text>
 
+      {/* Search bar (currently non-functional) */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -31,10 +55,14 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* City Selection */}
       <View style={styles.cityContainer}>
         <TouchableOpacity
-          style={styles.cityBox}
-          onPress={() => navigateToCheckPrice("Bangalore")}
+          style={[
+            styles.cityBox,
+            selectedCity === "Bangalore" && styles.cityBoxSelected,
+          ]}
+          onPress={() => handleCitySelection("Bangalore")}
         >
           <Image
             source={require("@/assets/images/bangalore.png")}
@@ -44,8 +72,11 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.cityBox}
-          onPress={() => navigateToCheckPrice("Kolkata")}
+          style={[
+            styles.cityBox,
+            selectedCity === "Kolkata" && styles.cityBoxSelected,
+          ]}
+          onPress={() => handleCitySelection("Kolkata")}
         >
           <Image
             source={require("@/assets/images/kolkata.png")}
@@ -55,8 +86,11 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.cityBox}
-          onPress={() => navigateToCheckPrice("New Delhi")}
+          style={[
+            styles.cityBox,
+            selectedCity === "New Delhi" && styles.cityBoxSelected,
+          ]}
+          onPress={() => handleCitySelection("New Delhi")}
         >
           <Image
             source={require("@/assets/images/delhi.png")}
@@ -66,8 +100,11 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.cityBox}
-          onPress={() => navigateToCheckPrice("Mumbai")}
+          style={[
+            styles.cityBox,
+            selectedCity === "Mumbai" && styles.cityBoxSelected,
+          ]}
+          onPress={() => handleCitySelection("Mumbai")}
         >
           <Image
             source={require("@/assets/images/mumbai.png")}
@@ -77,21 +114,27 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Locality Name Input */}
       <TextInput
         style={styles.addressInput}
-        placeholder="Address"
+        placeholder="Locality Name"
         placeholderTextColor="#888"
+        value={locality}
+        onChangeText={setLocality}
       />
 
+      {/* Check Price Button */}
       <TouchableOpacity
         style={styles.checkPriceButton}
-        // onPress={() => navigateToCheckPrice(null)}
+        onPress={handleCheckPrice}
       >
         <Text style={styles.buttonText}>Check Price</Text>
       </TouchableOpacity>
     </View>
   );
 }
+
+const PRIMARY_COLOR = "#503591";
 
 const styles = StyleSheet.create({
   container: {
@@ -102,7 +145,7 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#503591",
+    color: PRIMARY_COLOR,
     textAlign: "center",
     marginBottom: 30,
   },
@@ -139,6 +182,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
     width: "45%",
+    padding: 10,
+    borderRadius: 8,
+    // No border by default
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  cityBoxSelected: {
+    // Highlight with a visible stroke when selected
+    borderColor: PRIMARY_COLOR,
+    borderWidth: 2,
   },
   cityIcon: {
     width: 60,
@@ -149,7 +202,7 @@ const styles = StyleSheet.create({
   cityName: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#503591",
+    color: PRIMARY_COLOR,
     textAlign: "center",
   },
   addressInput: {
@@ -163,7 +216,7 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   checkPriceButton: {
-    backgroundColor: "#503591",
+    backgroundColor: PRIMARY_COLOR,
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: "center",

@@ -5,121 +5,170 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  TextInput,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import Slider from "@react-native-community/slider";
 
 export default function CheckPriceScreen() {
   const router = useRouter();
-  const { city } = useLocalSearchParams();
+  // Grab both city and locality from the query params
+  const { city, locality } = useLocalSearchParams<{
+    city?: string;
+    locality?: string;
+  }>();
+
   const [selectedUserType, setSelectedUserType] = useState("Owner");
-  const [selectedBedrooms, setSelectedBedrooms] = useState<number | null>(null);
-  const [selectedBathrooms, setSelectedBathrooms] = useState<number | null>(
-    null
-  );
+  const [selectedBedrooms, setSelectedBedrooms] = useState<
+    number | string | null
+  >(null);
+  const [selectedBathrooms, setSelectedBathrooms] = useState<
+    number | string | null
+  >(null);
   const [furnishing, setFurnishing] = useState<string | null>(null);
-  const [propertySize, setPropertySize] = useState<[number, number]>([
-    500, 5000,
-  ]); // Min-Max range
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [propertySize, setPropertySize] = useState("");
 
   const toggleSelection = (
     value: number | string,
     setter: (val: any) => void,
-    state: any
+    currentValue: any
   ) => {
-    setter(state === value ? null : value);
+    setter(currentValue === value ? null : value);
   };
 
-  const toggleAmenity = (amenity: string) => {
-    setSelectedAmenities((prev) =>
-      prev.includes(amenity)
-        ? prev.filter((item) => item !== amenity)
-        : [...prev, amenity]
-    );
+  const handlePredictPrice = () => {
+    // Implement your logic here
+    console.log({
+      city,
+      locality,
+      selectedUserType,
+      selectedBedrooms,
+      selectedBathrooms,
+      furnishing,
+      propertySize,
+    });
   };
+
+  // Decide what to show in the screen title
+  // 1) If both city and locality exist, show "Check Price for {locality}, {city}"
+  // 2) Else if only city, show "Check Price for {city}"
+  // 3) Else just "Check Price"
+  const screenTitle =
+    locality && city
+      ? `Check Price for ${locality}, ${city}`
+      : city
+      ? `Check Price for ${city}`
+      : "Check Price";
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.header}>Check Price {city ? `for ${city}` : ""}</Text>
+    <ScrollView style={styles.container} bounces={false}>
+      <Text style={styles.screenTitle}>{screenTitle}</Text>
 
-      {/* User Type Toggle */}
-      <View style={styles.toggleContainer}>
-        {["Owner", "Tenant"].map((type) => (
-          <TouchableOpacity
-            key={type}
+      {/* Owner / Tenant Toggle */}
+      <View style={styles.toggleWrapper}>
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
+            selectedUserType === "Owner" && styles.toggleButtonSelected,
+          ]}
+          onPress={() => setSelectedUserType("Owner")}
+        >
+          <Text
             style={[
-              styles.toggleButton,
-              selectedUserType === type && styles.toggleButtonSelected,
+              styles.toggleButtonText,
+              selectedUserType === "Owner" && styles.toggleButtonTextSelected,
             ]}
-            onPress={() => setSelectedUserType(type)}
           >
-            <Text
-              style={[
-                styles.toggleText,
-                selectedUserType === type && styles.toggleTextSelected,
-              ]}
-            >
-              {type}
-            </Text>
-          </TouchableOpacity>
-        ))}
+            Owner
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
+            selectedUserType === "Tenant" && styles.toggleButtonSelected,
+          ]}
+          onPress={() => setSelectedUserType("Tenant")}
+        >
+          <Text
+            style={[
+              styles.toggleButtonText,
+              selectedUserType === "Tenant" && styles.toggleButtonTextSelected,
+            ]}
+          >
+            Tenant
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Bedrooms Selection */}
-      <Text style={styles.sectionTitle}>Bedrooms</Text>
-      <View style={styles.selectionContainer}>
-        {[1, 2, 3, 4, 5, 6, "7+"].map((num) => (
+      {/* Bedrooms */}
+      <Text style={styles.sectionLabel}>Bedrooms</Text>
+      <View style={styles.optionsRow}>
+        {[1, 2, 3, 4, "5+"].map((num) => (
           <TouchableOpacity
             key={num}
             style={[
-              styles.selectionButton,
-              selectedBedrooms === num && styles.selectionButtonSelected,
+              styles.optionButton,
+              selectedBedrooms === num && styles.optionButtonSelected,
             ]}
             onPress={() =>
               toggleSelection(num, setSelectedBedrooms, selectedBedrooms)
             }
           >
-            <Text style={styles.selectionText}>{num}</Text>
+            <Text
+              style={[
+                styles.optionButtonText,
+                selectedBedrooms === num && styles.optionButtonTextSelected,
+              ]}
+            >
+              {num}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
+      <View style={styles.separator} />
 
-      {/* Bathrooms Selection */}
-      <Text style={styles.sectionTitle}>Bathroom</Text>
-      <View style={styles.selectionContainer}>
-        {[1, 2, 3, 4, 5, 6, "7+"].map((num) => (
+      {/* Bathrooms */}
+      <Text style={styles.sectionLabel}>Bathroom</Text>
+      <View style={styles.optionsRow}>
+        {[1, 2, "3+"].map((num) => (
           <TouchableOpacity
             key={num}
             style={[
-              styles.selectionButton,
-              selectedBathrooms === num && styles.selectionButtonSelected,
+              styles.optionButton,
+              selectedBathrooms === num && styles.optionButtonSelected,
             ]}
             onPress={() =>
               toggleSelection(num, setSelectedBathrooms, selectedBathrooms)
             }
           >
-            <Text style={styles.selectionText}>{num}</Text>
+            <Text
+              style={[
+                styles.optionButtonText,
+                selectedBathrooms === num && styles.optionButtonTextSelected,
+              ]}
+            >
+              {num}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
+      <View style={styles.separator} />
 
-      {/* Furnishing Selection */}
-      <Text style={styles.sectionTitle}>Furnishings</Text>
-      <View style={styles.toggleContainer}>
-        {["Furnished", "Unfurnished"].map((type) => (
+      {/* Furnishings */}
+      <Text style={styles.sectionLabel}>Furnishings</Text>
+      <View style={styles.optionsRow}>
+        {["Furnished", "Semifurnished", "Unfurnished"].map((type) => (
           <TouchableOpacity
             key={type}
             style={[
-              styles.toggleButton,
-              furnishing === type && styles.toggleButtonSelected,
+              styles.optionButton,
+              furnishing === type && styles.optionButtonSelected,
             ]}
             onPress={() => setFurnishing(type)}
           >
             <Text
               style={[
-                styles.toggleText,
-                furnishing === type && styles.toggleTextSelected,
+                styles.optionButtonText,
+                furnishing === type && styles.optionButtonTextSelected,
               ]}
             >
               {type}
@@ -127,164 +176,134 @@ export default function CheckPriceScreen() {
           </TouchableOpacity>
         ))}
       </View>
+      <View style={styles.separator} />
 
-      {/* Property Size Slider */}
-      <Text style={styles.sectionTitle}>Property Size (sq.ft)</Text>
-      <View style={styles.sliderContainer}>
-        <Text style={styles.sliderValue}>Min.</Text>
-        <Slider
-          style={styles.slider}
-          minimumValue={500}
-          maximumValue={5000}
-          step={100}
-          value={propertySize[0]}
-          onValueChange={(value) => setPropertySize([value, propertySize[1]])}
-          minimumTrackTintColor="#503591"
-          thumbTintColor="#503591"
-        />
-        <Text style={styles.sliderValue}>Max.</Text>
-      </View>
-
-      {/* Amenities Selection */}
-      <Text style={styles.sectionTitle}>Amenities</Text>
-      <View style={styles.amenitiesContainer}>
-        {[
-          "Balcony",
-          "Central A/C",
-          "Maids Room",
-          "Private Pool",
-          "Pets Allowed",
-        ].map((amenity) => (
-          <TouchableOpacity
-            key={amenity}
-            style={[
-              styles.amenityButton,
-              selectedAmenities.includes(amenity) &&
-                styles.amenityButtonSelected,
-            ]}
-            onPress={() => toggleAmenity(amenity)}
-          >
-            <Text style={styles.amenityText}>{amenity}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {/* Property Size */}
+      <Text style={styles.sectionLabel}>Property Size (sq.ft):</Text>
+      <TextInput
+        style={styles.textInput}
+        placeholder="Enter property size"
+        placeholderTextColor="#999"
+        keyboardType="numeric"
+        value={propertySize}
+        onChangeText={setPropertySize}
+      />
 
       {/* Predict Price Button */}
-      <TouchableOpacity style={styles.predictButton}>
-        <Text style={styles.buttonText}>Predict Price Range</Text>
+      <TouchableOpacity
+        style={styles.predictButton}
+        onPress={handlePredictPrice}
+      >
+        <Text style={styles.predictButtonText}>Predict Price Range</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 }
 
+const PRIMARY_COLOR = "#503691";
+const BORDER_COLOR = "#D9D9D9";
+const BACKGROUND_COLOR = "#F9F6FF";
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9F6FF",
-    padding: 20,
+    backgroundColor: BACKGROUND_COLOR,
+    paddingHorizontal: 20,
+    paddingTop: 40,
   },
-  header: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#503591",
+  screenTitle: {
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#000",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 30,
   },
-  toggleContainer: {
+  /* Top Toggle (Owner/Tenant) */
+  toggleWrapper: {
     flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 20,
+    borderColor: PRIMARY_COLOR,
+    borderWidth: 1,
+    borderRadius: 20,
+    alignSelf: "center",
+    overflow: "hidden",
+    marginBottom: 30,
   },
   toggleButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginHorizontal: 10,
-    borderWidth: 2,
-    borderColor: "#503591",
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    backgroundColor: BACKGROUND_COLOR,
   },
   toggleButtonSelected: {
-    backgroundColor: "#503591",
+    backgroundColor: PRIMARY_COLOR,
   },
-  toggleText: {
+  toggleButtonText: {
     fontSize: 16,
-    color: "#503591",
+    color: PRIMARY_COLOR,
   },
-  toggleTextSelected: {
+  toggleButtonTextSelected: {
     color: "#FFF",
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#503591",
+  /* Section Labels (Bedrooms, Bathroom, etc.) */
+  sectionLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
     marginBottom: 10,
   },
-  selectionContainer: {
+  /* Option Buttons (Bedrooms, Bathroom, Furnishings) */
+  optionsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
     marginBottom: 20,
   },
-  selectionButton: {
-    width: "22%",
-    paddingVertical: 10,
-    alignItems: "center",
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: "#503591",
+  optionButton: {
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginRight: 10,
     marginBottom: 10,
   },
-  selectionButtonSelected: {
-    backgroundColor: "#503591",
+  optionButtonSelected: {
+    backgroundColor: PRIMARY_COLOR,
+    borderColor: PRIMARY_COLOR,
   },
-  selectionText: {
-    fontSize: 16,
-    color: "#503591",
+  optionButtonText: {
+    fontSize: 14,
+    color: "#000",
   },
-  sliderContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  optionButtonTextSelected: {
+    color: "#FFF",
+  },
+  /* Separator line between sections */
+  separator: {
+    height: 1,
+    backgroundColor: BORDER_COLOR,
     marginBottom: 20,
   },
-  slider: {
-    flex: 1,
-    marginHorizontal: 10,
+  /* Text Input (Property Size) */
+  textInput: {
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    fontSize: 14,
+    color: "#000",
   },
-  sliderValue: {
-    fontSize: 16,
-    color: "#503591",
-  },
-  amenitiesContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  amenityButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: "#503591",
-    marginBottom: 10,
-  },
-  amenityButtonSelected: {
-    backgroundColor: "#503591",
-  },
-  amenityText: {
-    fontSize: 16,
-    color: "#503591",
-  },
+  /* Predict Button */
   predictButton: {
-    backgroundColor: "#503591",
-    paddingVertical: 15,
-    borderRadius: 8,
+    marginTop: 20,
+    backgroundColor: PRIMARY_COLOR,
+    borderRadius: 24,
     alignItems: "center",
+    paddingVertical: 14,
+    marginBottom: 30,
   },
-  buttonText: {
+  predictButtonText: {
     color: "#FFF",
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
   },
 });
