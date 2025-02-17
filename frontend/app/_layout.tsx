@@ -25,6 +25,10 @@ export default function RootLayout() {
             headerTintColor: "#000",
           }}
         />
+        <Stack.Screen
+          name="(price-prediction)"
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="(login)" options={{ headerShown: false }} />
       </Stack>
       {/* </Provider> */}

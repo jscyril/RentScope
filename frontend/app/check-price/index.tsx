@@ -11,6 +11,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 
 export default function CheckPriceScreen() {
   const router = useRouter();
+
   // Grab both city and locality from the query params
   const { city, locality } = useLocalSearchParams<{
     city?: string;
@@ -36,7 +37,22 @@ export default function CheckPriceScreen() {
   };
 
   const handlePredictPrice = () => {
-    // Implement your logic here
+    // Navigate to the price prediction screen and pass data as query params
+    router.push({
+      pathname: "/(price-prediction)",
+      params: {
+        // Convert numbers to strings for query params
+        propertySize,
+        bedrooms: selectedBedrooms?.toString() ?? "",
+        bathrooms: selectedBathrooms?.toString() ?? "",
+        furnishing: furnishing ?? "",
+        location: locality ?? "",
+        city: city ?? "",
+        userType: selectedUserType,
+      },
+    });
+
+    // For debugging
     console.log({
       city,
       locality,
@@ -49,9 +65,6 @@ export default function CheckPriceScreen() {
   };
 
   // Decide what to show in the screen title
-  // 1) If both city and locality exist, show "Check Price for {locality}, {city}"
-  // 2) Else if only city, show "Check Price for {city}"
-  // 3) Else just "Check Price"
   const screenTitle =
     locality && city
       ? `Check Price for ${locality}, ${city}`
@@ -218,7 +231,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 30,
   },
-  /* Top Toggle (Owner/Tenant) */
   toggleWrapper: {
     flexDirection: "row",
     borderColor: PRIMARY_COLOR,
@@ -243,14 +255,12 @@ const styles = StyleSheet.create({
   toggleButtonTextSelected: {
     color: "#FFF",
   },
-  /* Section Labels (Bedrooms, Bathroom, etc.) */
   sectionLabel: {
     fontSize: 16,
     fontWeight: "600",
     color: "#000",
     marginBottom: 10,
   },
-  /* Option Buttons (Bedrooms, Bathroom, Furnishings) */
   optionsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -276,13 +286,11 @@ const styles = StyleSheet.create({
   optionButtonTextSelected: {
     color: "#FFF",
   },
-  /* Separator line between sections */
   separator: {
     height: 1,
     backgroundColor: BORDER_COLOR,
     marginBottom: 20,
   },
-  /* Text Input (Property Size) */
   textInput: {
     borderWidth: 1,
     borderColor: BORDER_COLOR,
@@ -292,7 +300,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#000",
   },
-  /* Predict Button */
   predictButton: {
     marginTop: 20,
     backgroundColor: PRIMARY_COLOR,
