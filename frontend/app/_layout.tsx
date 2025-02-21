@@ -12,19 +12,8 @@ export default function RootLayout() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(signup)" options={{ headerShown: false }} />
         <Stack.Screen name="(home)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="check-price"
-          options={{
-            headerTitle: "Check Price",
-            headerStyle: { backgroundColor: "#EAE2FA" },
-            headerTitleStyle: {
-              color: "#000",
-              fontSize: 18,
-              fontWeight: "600",
-            },
-            headerTintColor: "#000",
-          }}
-        />
+        <Stack.Screen name="(check-price)" options={{ headerShown: false }} />
+
         <Stack.Screen
           name="(price-prediction)"
           options={{ headerShown: false }}

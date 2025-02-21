@@ -33,7 +33,7 @@ export default function SignupScreen() {
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      // router.replace("/(tabs)"); // Navigate to the app on success
+      router.replace("/(home)"); // Navigate to the app on success
     } catch (err: any) {
       setError(err.message);
     }
@@ -119,10 +119,7 @@ export default function SignupScreen() {
 
       <Text style={styles.footerText}>
         Already have an account?{" "}
-        <Text
-          style={styles.loginLink}
-          onPress={() => router.replace("/(login)")}
-        >
+        <Text style={styles.loginLink} onPress={() => router.push("/(login)")}>
           Login
         </Text>
       </Text>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, usePathname, useSegments } from "expo-router";
 import { auth } from "@/constants/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import * as SplashScreen from "expo-splash-screen";
@@ -8,16 +8,19 @@ import * as SplashScreen from "expo-splash-screen";
 SplashScreen.preventAutoHideAsync();
 
 const WelcomeScreen = () => {
+  const pathname = usePathname();
+  const segments = useSegments();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("Current Route:", pathname, "\nCurrent Segment:", segments);
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        console.log("Home screen");
-        router.replace("/(home)");
+        router.push("/(home)");
       } else {
         console.log("No user signed in");
+        router.replace("/");
       }
       setLoading(false);
       SplashScreen.hideAsync();

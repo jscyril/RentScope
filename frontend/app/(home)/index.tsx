@@ -8,10 +8,15 @@ import {
   Image,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, usePathname, useSegments } from "expo-router";
+import { signOut } from "firebase/auth";
+import { auth } from "@/constants/firebase";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const segemnt = useSegments();
+  const pathname = usePathname();
+  console.log("Current segmentlk:", segemnt);
 
   // Track which city is selected (if any)
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
@@ -30,18 +35,46 @@ export default function HomeScreen() {
       return;
     }
 
-    // Optionally pass the locality name as well if you want
-    // e.g. ?city=Bangalore&locality=Whitefield
     router.push(
-      `/check-price?city=${encodeURIComponent(
+      `/(check-price)?city=${encodeURIComponent(
         selectedCity
       )}&locality=${encodeURIComponent(locality)}`
     );
   };
 
+  const handleLogout = () => {
+    Alert.alert("Log Out", "Are you sure you want to log out?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Log Out",
+        onPress: async () => {
+          try {
+            console.log(auth);
+            await signOut(auth);
+            router.replace("/");
+          } catch (error: any) {
+            Alert.alert("Logout Error", error.message);
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Rentscope</Text>
+      <View style={styles.headerContainer}>
+        <Text style={styles.header}>Rentscope</Text>
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          <Image
+            source={require("@/assets/images/log_out.png")}
+            style={styles.logoutIcon}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      </View>
 
       {/* Search bar (currently non-functional) */}
       <View style={styles.searchContainer}>
@@ -142,13 +175,30 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9F6FF",
     padding: 20,
   },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 30,
+  },
   header: {
     fontSize: 24,
     fontWeight: "bold",
     color: PRIMARY_COLOR,
     textAlign: "center",
-    marginBottom: 30,
+    // marginBottom: 30,
   },
+  menuIcon: {
+    fontSize: 24,
+    color: PRIMARY_COLOR,
+  },
+  // header: {
+  //   fontSize: 24,
+  //   fontWeight: "bold",
+  //   color: PRIMARY_COLOR,
+  //   textAlign: "center",
+  //   marginBottom: 30,
+  // },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -225,5 +275,13 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  logoutButton: {
+    padding: 8, // Makes the touch area larger than the icon
+  },
+  logoutIcon: {
+    width: 24,
+    height: 24,
+    tintColor: PRIMARY_COLOR, // Optional: if you want to match the purple theme
   },
 });

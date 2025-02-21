@@ -7,7 +7,7 @@ import {
   ScrollView,
   TextInput,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, useSegments } from "expo-router";
 
 export default function CheckPriceScreen() {
   const router = useRouter();
@@ -17,7 +17,8 @@ export default function CheckPriceScreen() {
     city?: string;
     locality?: string;
   }>();
-
+  const pathname = useSegments();
+  console.log("Current Segment:", pathname);
   const [selectedUserType, setSelectedUserType] = useState("Owner");
   const [selectedBedrooms, setSelectedBedrooms] = useState<
     number | string | null

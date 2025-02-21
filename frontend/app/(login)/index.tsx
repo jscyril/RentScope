@@ -30,7 +30,7 @@ export default function LoginScreen() {
         password
       );
       console.log("User logged in:", userCredential.user);
-      // router.replace("/(tabs)"); // Redirect to the main app
+      router.push("/(home)"); // Redirect to the main app
     } catch (err) {
       setError("Invalid email or password");
     }
@@ -88,7 +88,7 @@ export default function LoginScreen() {
         Do not have an account?{" "}
         <Text
           style={styles.signUpLink}
-          onPress={() => router.replace("/(signup)")}
+          onPress={() => router.push("/(signup)")}
         >
           Sign up
         </Text>
