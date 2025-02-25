@@ -116,7 +116,7 @@ export default function CheckPriceScreen() {
       {/* Bedrooms */}
       <Text style={styles.sectionLabel}>Bedrooms</Text>
       <View style={styles.optionsRow}>
-        {[1, 2, 3, 4, "5+"].map((num) => (
+        {[1, 2, 3, 4].map((num) => (
           <TouchableOpacity
             key={num}
             style={[
@@ -143,7 +143,7 @@ export default function CheckPriceScreen() {
       {/* Bathrooms */}
       <Text style={styles.sectionLabel}>Bathroom</Text>
       <View style={styles.optionsRow}>
-        {[1, 2, "3+"].map((num) => (
+        {[1, 2, 3].map((num) => (
           <TouchableOpacity
             key={num}
             style={[
