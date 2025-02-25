@@ -3,6 +3,9 @@ from .helpers.model_loader import xgb_model, preprocessor
 import pandas as pd
 from django.views.decorators.csrf import ensure_csrf_cookie
 import json
+from .models import Prediction
+from django.core.serializers import serialize
+
 
 categorical_columns = ['seller_type', 'layout_type', 'property_type', 'furnish_type']
 numerical_columns = ['bedroom', 'area', 'bathroom', 'MinPrice', 'MaxPrice', 'AvgRent', 'price_per_sqft', 'locality_encoded', 'bedroom_area_interaction']
@@ -21,45 +24,70 @@ def infer_missing_fields(data):
 def predict_rent(request):
     if request.method == 'POST':
         try:
-            # Parse the JSON data
             data = json.loads(request.body.decode("utf-8"))
 
-            # Ensure all required user inputs are present
             required_fields = ["locality", "area", "bedroom", "furnish_type", "seller_type", "layout_type", "property_type", "bathroom"]
             missing_fields = [field for field in required_fields if field not in data]
             if missing_fields:
                 return JsonResponse({"error": f"Missing required fields: {missing_fields}"}, status=400)
 
-            # Convert numerical fields to proper types
             data["area"] = float(data["area"])
             data["bedroom"] = int(data["bedroom"])
             data["bathroom"] = int(data["bathroom"])
 
-            # Infer missing fields
             data = infer_missing_fields(data)
-
-            # Create a DataFrame
             df = pd.DataFrame([data])
 
-            # Ensure all expected columns are present
             for col in expected_columns:
                 if col not in df.columns:
-                    df[col] = None  # Add missing columns with default values
+                    df[col] = None 
 
-            # Transform input data
             df_preprocessed = preprocessor.transform(df)
-
-            # Make predictions
             prediction = xgb_model.predict(df_preprocessed)
-            predicted_rent = float(prediction[0])  # Convert to Python float
+            predicted_rent = float(prediction[0])  
 
-            # Return the predicted rent
+            # Save to database
+            Prediction.objects.create(
+                locality=data["locality"],
+                area=data["area"],
+                bedroom=data["bedroom"],
+                bathroom=data["bathroom"],
+                furnish_type=data["furnish_type"],
+                seller_type=data["seller_type"],
+                layout_type=data["layout_type"],
+                property_type=data["property_type"],
+                predicted_rent=predicted_rent
+            )
+
             return JsonResponse({"predicted_rent": predicted_rent}, status=200)
         except Exception as e:
             return JsonResponse({"error": f"Failed to process input: {str(e)}"}, status=400)
     else:
         return JsonResponse({"error": "Invalid request method"}, status=405)
 
+
+def get_predictions(request):
+    if request.method == "GET":
+        predictions = Prediction.objects.all().order_by("-created_at")[:10]  # Get last 10 predictions
+        data = [
+            {
+                "id": pred.id,
+                "locality": pred.locality,
+                "area": pred.area,
+                "bedroom": pred.bedroom,
+                "bathroom": pred.bathroom,
+                "furnish_type": pred.furnish_type,
+                "seller_type": pred.seller_type,
+                "layout_type": pred.layout_type,
+                "property_type": pred.property_type,
+                "predicted_rent": pred.predicted_rent,
+                "created_at": pred.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            for pred in predictions
+        ]
+        return JsonResponse({"predictions": data}, status=200)
+    else:
+        return JsonResponse({"error": "Invalid request method"}, status=405)
 
 
 @ensure_csrf_cookie

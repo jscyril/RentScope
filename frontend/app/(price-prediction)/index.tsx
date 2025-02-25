@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 
 interface PricePredictionScreenParams {
@@ -10,13 +10,12 @@ interface PricePredictionScreenParams {
   location?: string;
   city?: string;
   userType?: string;
+  layoutType?: string;
+  propertyType?: string;
 }
 
 const PricePredictionScreen: React.FC = () => {
-  // Use the hook without a generic...
   const rawParams = useLocalSearchParams();
-
-  // ...then cast to your interface
   const {
     propertySize = "N/A",
     bedrooms = "N/A",
@@ -25,16 +24,57 @@ const PricePredictionScreen: React.FC = () => {
     location = "N/A",
     city = "N/A",
     userType = "N/A",
+    layoutType = "default_layout",
+    propertyType = "default_type",
   } = rawParams as PricePredictionScreenParams;
 
-  // Mock an estimated price for now
-  const estimatedPrice = "₹ 8794";
+  const [predictedRent, setPredictedRent] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPrediction = async () => {
+      setLoading(true);
+      try {
+        const NGROK_URL = "https://prompt-friendly-longhorn.ngrok-free.app";
+
+        const response = await fetch(`${NGROK_URL}/api/predict_rent/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            locality: location,
+            area: propertySize,
+            bedroom: bedrooms,
+            bathroom: bathrooms,
+            furnish_type: furnishing,
+            seller_type: userType,
+            layout_type: "default_layout",
+            property_type: "default_type",
+          }),
+        });
+
+
+        const data = await response.json();
+        if (response.ok && data.predicted_rent !== undefined) {
+          setPredictedRent(`₹ ${data.predicted_rent.toFixed(2)}`);
+        } else {
+          setError(data.error || "Failed to fetch prediction.");
+        }
+      } catch (error) {
+        setError("Network Error: Unable to connect to server.");
+      }
+      setLoading(false);
+    };
+
+    fetchPrediction();
+  }, []);
 
   return (
     <View style={styles.container}>
       <Text style={styles.screenTitle}>Price Predictor</Text>
 
-      {/* Property Details */}
       <View style={styles.propertyDetails}>
         <View style={styles.detailRow}>
           <Text style={styles.detailLabel}>Property Size:</Text>
@@ -69,7 +109,13 @@ const PricePredictionScreen: React.FC = () => {
       {/* Estimated Price */}
       <View style={styles.estimatedPriceContainer}>
         <Text style={styles.estimatedPriceLabel}>Estimated Price:</Text>
-        <Text style={styles.estimatedPrice}>{estimatedPrice}</Text>
+        {loading ? (
+          <ActivityIndicator size="large" color="#503691" />
+        ) : error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : (
+          <Text style={styles.estimatedPrice}>{predictedRent}</Text>
+        )}
       </View>
     </View>
   );
@@ -121,6 +167,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
     color: "#503691",
+    marginTop: 10,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "red",
     marginTop: 10,
   },
 });
