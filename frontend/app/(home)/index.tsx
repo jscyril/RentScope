@@ -14,9 +14,7 @@ import { auth } from "@/constants/firebase";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const segemnt = useSegments();
-  const pathname = usePathname();
-  console.log("Current segmentlk:", segemnt);
+
 
   // Track which city is selected (if any)
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
@@ -54,7 +52,7 @@ export default function HomeScreen() {
           try {
             console.log(auth);
             await signOut(auth);
-            router.replace("/");
+            router.replace("/(login)");
           } catch (error: any) {
             Alert.alert("Logout Error", error.message);
           }

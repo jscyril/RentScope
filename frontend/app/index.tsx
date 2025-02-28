@@ -14,13 +14,12 @@ const WelcomeScreen = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("Current Route:", pathname, "\nCurrent Segment:", segments);
+    // console.log("Current Route:", pathname, "\nCurrent Segment:", segments);
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         router.push("/(home)");
       } else {
-        console.log("No user signed in");
-        router.replace("/");
+        router.replace("/(login)");
       }
       setLoading(false);
       SplashScreen.hideAsync();

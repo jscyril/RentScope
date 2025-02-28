@@ -24,6 +24,7 @@ def infer_missing_fields(data):
 def predict_rent(request):
     if request.method == 'POST':
         try:
+            print(request.body.decode("utf-8"))
             data = json.loads(request.body.decode("utf-8"))
 
             required_fields = ["locality", "area", "bedroom", "furnish_type", "seller_type", "layout_type", "property_type", "bathroom"]

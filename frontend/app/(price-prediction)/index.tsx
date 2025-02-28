@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { useLocalSearchParams } from "expo-router";
+import Axios from "@/constants/Axios";
 
 interface PricePredictionScreenParams {
   propertySize?: string;
@@ -36,34 +37,27 @@ const PricePredictionScreen: React.FC = () => {
     const fetchPrediction = async () => {
       setLoading(true);
       try {
-        const NGROK_URL = "https://prompt-friendly-longhorn.ngrok-free.app";
-
-        const response = await fetch(`${NGROK_URL}/api/predict_rent/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            locality: location,
-            area: propertySize,
-            bedroom: bedrooms,
-            bathroom: bathrooms,
-            furnish_type: furnishing,
-            seller_type: userType,
-            layout_type: "default_layout",
-            property_type: "default_type",
-          }),
+        const response = await Axios.post("/api/predict_rent/", {
+          locality: location,
+          area: propertySize,
+          bedroom: bedrooms,
+          bathroom: bathrooms,
+          furnish_type: furnishing,
+          seller_type: userType,
+          layout_type: "default_layout",
+          property_type: "default_type",
         });
 
-
-        const data = await response.json();
-        if (response.ok && data.predicted_rent !== undefined) {
+        // const data = await response.json();
+        const data = response.data;
+        if (response && data.predicted_rent !== undefined) {
           setPredictedRent(`₹ ${data.predicted_rent.toFixed(2)}`);
         } else {
-          setError(data.error || "Failed to fetch prediction.");
+          setError(data || "Failed to fetch prediction.");
         }
       } catch (error) {
         setError("Network Error: Unable to connect to server.");
+        console.log(error);
       }
       setLoading(false);
     };

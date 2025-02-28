@@ -18,7 +18,7 @@ export default function CheckPriceScreen() {
     locality?: string;
   }>();
   const pathname = useSegments();
-  console.log("Current Segment:", pathname);
+  // console.log("Current Segment:", pathname);
   const [selectedUserType, setSelectedUserType] = useState("Owner");
   const [selectedBedrooms, setSelectedBedrooms] = useState<
     number | string | null
