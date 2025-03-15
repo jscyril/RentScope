@@ -1,53 +1,101 @@
 from django.http import JsonResponse
 from .helpers.model_loader import xgb_model, preprocessor
 import pandas as pd
+import numpy as np
 from django.views.decorators.csrf import ensure_csrf_cookie
 import json
 from .models import Prediction
-from django.core.serializers import serialize
+import logging
 
+logger = logging.getLogger(__name__)
 
+# Expected columns (same as used during training)
 categorical_columns = ['seller_type', 'layout_type', 'property_type', 'furnish_type']
-numerical_columns = ['bedroom', 'area', 'bathroom', 'MinPrice', 'MaxPrice', 'AvgRent', 'price_per_sqft', 'locality_encoded', 'bedroom_area_interaction']
+numerical_columns = [
+    'bedroom', 'area', 'bathroom', 'MinPrice', 'MaxPrice', 'AvgRent',
+    'price_per_sqft', 'log_price_per_sqft', 'locality_encoded', 'bedroom_area_interaction'
+]
 expected_columns = numerical_columns + categorical_columns
 
 def infer_missing_fields(data):
-    """Infer additional fields based on user input."""
-    data["MinPrice"] = data["area"] * 15  # Example: Estimating min rent based on area
-    data["MaxPrice"] = data["area"] * 25  # Example: Estimating max rent based on area
-    data["AvgRent"] = (data["MinPrice"] + data["MaxPrice"]) / 2  # Calculate average rent
-    data["price_per_sqft"] = data["AvgRent"] / data["area"]  # Price per square foot
-    data["locality_encoded"] = data["AvgRent"]  # Using average rent as locality encoding
-    data["bedroom_area_interaction"] = data["bedroom"] * data["area"]  # Interaction term
+    """
+    Compute additional fields required for the model.
+    Adjust these computations to match your training pipeline.
+    """
+    try:
+        area = float(data.get("area", 0))
+        bedroom = int(data.get("bedroom", 0))
+    except Exception as e:
+        raise ValueError(f"Error in type conversion in infer_missing_fields: {e}")
+    
+    # Example calculations
+    data["MinPrice"] = area * 15  
+    data["MaxPrice"] = area * 25  
+    data["AvgRent"] = (data["MinPrice"] + data["MaxPrice"]) / 2  
+    data["price_per_sqft"] = data["AvgRent"] / area if area else 0  
+    # Compute log_price_per_sqft using a small constant to avoid log(0)
+    data["log_price_per_sqft"] = np.log(data["price_per_sqft"] + 1)
+    # Use AvgRent as a simple encoding for locality (example logic)
+    data["locality_encoded"] = data["AvgRent"]  
+    data["bedroom_area_interaction"] = bedroom * area  
     return data
 
 def predict_rent(request):
     if request.method == 'POST':
         try:
-            print(request.body.decode("utf-8"))
-            data = json.loads(request.body.decode("utf-8"))
-
-            required_fields = ["locality", "area", "bedroom", "furnish_type", "seller_type", "layout_type", "property_type", "bathroom"]
+            # Decode and parse JSON input
+            body_unicode = request.body.decode("utf-8")
+            data = json.loads(body_unicode)
+            logger.debug(f"Received data: {data}")
+            
+            # Check required fields
+            required_fields = [
+                "locality", "area", "bedroom", "furnish_type",
+                "seller_type", "layout_type", "property_type", "bathroom"
+            ]
             missing_fields = [field for field in required_fields if field not in data]
             if missing_fields:
                 return JsonResponse({"error": f"Missing required fields: {missing_fields}"}, status=400)
 
-            data["area"] = float(data["area"])
-            data["bedroom"] = int(data["bedroom"])
-            data["bathroom"] = int(data["bathroom"])
-
+            # Convert numeric fields
+            try:
+                data["area"] = float(data["area"])
+                data["bedroom"] = int(data["bedroom"])
+                data["bathroom"] = int(data["bathroom"])
+            except Exception as conv_err:
+                return JsonResponse({"error": f"Conversion error: {str(conv_err)}"}, status=400)
+            
+            # Compute additional features
             data = infer_missing_fields(data)
+            
+            # Create DataFrame from the input dictionary
             df = pd.DataFrame([data])
-
+            # Ensure all expected columns exist (fill with 0 if missing)
             for col in expected_columns:
                 if col not in df.columns:
-                    df[col] = None 
-
-            df_preprocessed = preprocessor.transform(df)
+                    df[col] = 0
+            
+            # Drop extra columns so that only expected_columns remain
+            df = df[expected_columns]
+            logger.debug(f"DataFrame before preprocessing:\n{df.head()}\n{df.dtypes}")
+            
+            # Apply the preprocessor
+            try:
+                df_preprocessed = preprocessor.transform(df)
+            except Exception as e:
+                error_msg = (
+                    f"Preprocessing error: {str(e)}. "
+                    f"DataFrame columns: {list(df.columns)}, "
+                    f"dtypes: {df.dtypes.to_dict()}"
+                )
+                logger.error(error_msg)
+                return JsonResponse({"error": error_msg}, status=400)
+            
+            # Predict using the XGBoost model
             prediction = xgb_model.predict(df_preprocessed)
-            predicted_rent = float(prediction[0])  
-
-            # Save to database
+            predicted_rent = float(prediction[0])
+            
+            # Save prediction to the database
             Prediction.objects.create(
                 locality=data["locality"],
                 area=data["area"],
@@ -59,17 +107,17 @@ def predict_rent(request):
                 property_type=data["property_type"],
                 predicted_rent=predicted_rent
             )
-
+            
             return JsonResponse({"predicted_rent": predicted_rent}, status=200)
         except Exception as e:
+            logger.exception("Error processing request")
             return JsonResponse({"error": f"Failed to process input: {str(e)}"}, status=400)
     else:
         return JsonResponse({"error": "Invalid request method"}, status=405)
 
-
 def get_predictions(request):
     if request.method == "GET":
-        predictions = Prediction.objects.all().order_by("-created_at")[:10]  # Get last 10 predictions
+        predictions = Prediction.objects.all().order_by("-created_at")[:10]
         data = [
             {
                 "id": pred.id,
@@ -90,7 +138,7 @@ def get_predictions(request):
     else:
         return JsonResponse({"error": "Invalid request method"}, status=405)
 
-
+from django.views.decorators.csrf import ensure_csrf_cookie
 @ensure_csrf_cookie
 def csrf_token_view(request):
     return JsonResponse({"message": "CSRF cookie set!"})
