@@ -33,7 +33,7 @@ export default function SignupScreen() {
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      router.replace("/(home)"); // Navigate to the app on success
+      router.replace("/(location)"); // Navigate to the app on success
     } catch (err: any) {
       setError(err.message);
     }

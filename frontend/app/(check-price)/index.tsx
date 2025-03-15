@@ -6,19 +6,17 @@ import {
   StyleSheet,
   ScrollView,
   TextInput,
+  Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams, useSegments } from "expo-router";
 
 export default function CheckPriceScreen() {
   const router = useRouter();
-
-  // Grab both city and locality from the query params
   const { city, locality } = useLocalSearchParams<{
     city?: string;
     locality?: string;
   }>();
-  const pathname = useSegments();
-  // console.log("Current Segment:", pathname);
+
   const [selectedUserType, setSelectedUserType] = useState("Owner");
   const [selectedBedrooms, setSelectedBedrooms] = useState<
     number | string | null
@@ -29,6 +27,7 @@ export default function CheckPriceScreen() {
   const [furnishing, setFurnishing] = useState<string | null>(null);
   const [propertySize, setPropertySize] = useState("");
 
+  // Helper to toggle selection for bedrooms/bathrooms
   const toggleSelection = (
     value: number | string,
     setter: (val: any) => void,
@@ -38,11 +37,20 @@ export default function CheckPriceScreen() {
   };
 
   const handlePredictPrice = () => {
-    // Navigate to the price prediction screen and pass data as query params
+    // Validate property size
+    const numericValue = parseInt(propertySize, 10);
+    if (isNaN(numericValue) || numericValue < 100 || numericValue > 4000) {
+      Alert.alert(
+        "Invalid Property Size",
+        "Please enter a property size between 100 and 4000 sq.ft."
+      );
+      return; // Stop here if it's out of range
+    }
+
+    // If valid, navigate to the price prediction screen
     router.push({
       pathname: "/(price-prediction)",
       params: {
-        // Convert numbers to strings for query params
         propertySize,
         bedrooms: selectedBedrooms?.toString() ?? "",
         bathrooms: selectedBathrooms?.toString() ?? "",
@@ -51,17 +59,6 @@ export default function CheckPriceScreen() {
         city: city ?? "",
         userType: selectedUserType,
       },
-    });
-
-    // For debugging
-    console.log({
-      city,
-      locality,
-      selectedUserType,
-      selectedBedrooms,
-      selectedBathrooms,
-      furnishing,
-      propertySize,
     });
   };
 
@@ -213,6 +210,8 @@ export default function CheckPriceScreen() {
     </ScrollView>
   );
 }
+
+/* --- STYLES --- */
 
 const PRIMARY_COLOR = "#503691";
 const BORDER_COLOR = "#D9D9D9";

@@ -14,13 +14,13 @@ const WelcomeScreen = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // console.log("Current Route:", pathname, "\nCurrent Segment:", segments);
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        router.push("/(home)");
-      } else {
-        router.replace("/(login)");
+        router.push("/(location)");
       }
+      // } else {
+      //   router.replace("/");
+      // }
       setLoading(false);
       SplashScreen.hideAsync();
     });

@@ -30,7 +30,7 @@ export default function LoginScreen() {
         password
       );
       console.log("User logged in:", userCredential.user);
-      router.push("/(home)"); // Redirect to the main app
+      router.push("/(location)"); // Redirect to the main app
     } catch (err) {
       setError("Invalid email or password");
     }
